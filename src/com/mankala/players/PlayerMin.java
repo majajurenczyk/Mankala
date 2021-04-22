@@ -23,6 +23,4 @@ public class PlayerMin extends AIPlayer{
         int resultMove = Collections.min(evaluationFunctionForMoveOnDepth.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
         return possibleMoves.get(resultMove);
     }
-
-
 }
