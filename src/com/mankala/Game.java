@@ -1,4 +1,5 @@
 package com.mankala;
+import com.mankala.players.HumanPlayer;
 import com.mankala.players.Player;
 import java.util.HashMap;
 import java.util.Random;
@@ -29,10 +30,10 @@ public class Game {
     }
 
     public void changePlayer(){
-        if(actualPlayer == firstPlayer && !actualGameState.isFirstNextMove()){
+        if(actualPlayer.equals(firstPlayer) && !actualGameState.isFirstNextMove()){
             actualPlayer = secondPlayer;
         }
-        if(actualPlayer == secondPlayer && !actualGameState.isSecondNextMove()){
+        else if(actualPlayer.equals(secondPlayer) && !actualGameState.isSecondNextMove()){
             actualPlayer = firstPlayer;
         }
     }
@@ -44,10 +45,10 @@ public class Game {
     }
 
     public void updateNextPossibleStatesByMove(){
-        if(actualPlayer == firstPlayer){
+        if(actualPlayer.equals(firstPlayer)){
             IntStream.range(1, 7).forEach(hole -> nextPossibleStatesByMove.put(hole, actualGameState.getGameStateAfterFirstPlayerMove(hole)));
         }
-        else if(actualPlayer == secondPlayer)
+        else if(actualPlayer.equals(secondPlayer))
             IntStream.range(1, 7).forEach(hole -> nextPossibleStatesByMove.put(hole, actualGameState.getGameStateAfterSecondPlayerMove(hole)));
     }
 
@@ -57,8 +58,8 @@ public class Game {
         while (!actualGameState.isOver()){
             actualGameState.drawState();
             actualGameState = actualPlayer.makeMove(nextPossibleStatesByMove);
-            updateNextPossibleStatesByMove();
             changePlayer();
+            updateNextPossibleStatesByMove();
         }
         if(actualGameState.isFirstWinner()){
             System.out.println("\nWygrał" + firstPlayer.getPlayerName() + "!\n");
@@ -72,5 +73,10 @@ public class Game {
             System.out.println("\nerror\n");
             return null;
         }
+    }
+
+    public static void main(String[] args) {
+        Game game = new Game(new HumanPlayer("Maja1"), new HumanPlayer("Maja2"));
+        game.gameLoop();
     }
 }
