@@ -19,7 +19,7 @@ public class PlayerMax extends AIPlayer {
     public GameState makeMove(HashMap<Integer, GameState> possibleMoves) {
         HashMap<Integer, Integer> evaluationFunctionForMoveOnDepth =  new HashMap<>();
         for(int move : possibleMoves.keySet()){
-            evaluationFunctionForMoveOnDepth.put(move, min_max(possibleMoves.get(move), searchDepth, 1));
+            evaluationFunctionForMoveOnDepth.put(move, min_max(possibleMoves.get(move), searchDepth, 2));
         }
         int resultMove = Collections.max(evaluationFunctionForMoveOnDepth.entrySet(), Comparator.comparingInt(Map.Entry::getValue)).getKey();
         return possibleMoves.get(resultMove);

@@ -1,9 +1,9 @@
 package com.mankala;
-import com.mankala.players.HumanPlayer;
 import com.mankala.players.Player;
+import com.mankala.players.PlayerMax;
+import com.mankala.players.PlayerMin;
 import java.util.HashMap;
 import java.util.Random;
-import java.util.stream.IntStream;
 
 public class Game {
     private Player firstPlayer;
@@ -46,10 +46,10 @@ public class Game {
 
     public void updateNextPossibleStatesByMove(){
         if(actualPlayer.equals(firstPlayer)){
-            IntStream.range(1, 7).forEach(hole -> nextPossibleStatesByMove.put(hole, actualGameState.getGameStateAfterFirstPlayerMove(hole)));
+            nextPossibleStatesByMove = actualGameState.getPossibleNextStatesForFirstPlayer();
         }
         else if(actualPlayer.equals(secondPlayer))
-            IntStream.range(1, 7).forEach(hole -> nextPossibleStatesByMove.put(hole, actualGameState.getGameStateAfterSecondPlayerMove(hole)));
+            nextPossibleStatesByMove = actualGameState.getPossibleNextStatesForSecondPlayer();
     }
 
     public Player gameLoop(){
@@ -61,12 +61,13 @@ public class Game {
             changePlayer();
             updateNextPossibleStatesByMove();
         }
+        actualGameState.drawState();
         if(actualGameState.isFirstWinner()){
-            System.out.println("\nWygrał" + firstPlayer.getPlayerName() + "!\n");
+            System.out.println("\nWygrał " + firstPlayer.getPlayerName() + "!\n");
             return firstPlayer;
         }
         if(actualGameState.isSecondWinner()){
-            System.out.println("\nWygrał" + secondPlayer.getPlayerName() + "!\n");
+            System.out.println("\nWygrał " + secondPlayer.getPlayerName() + "!\n");
             return secondPlayer;
         }
         else{
@@ -76,7 +77,9 @@ public class Game {
     }
 
     public static void main(String[] args) {
-        Game game = new Game(new HumanPlayer("Maja1"), new HumanPlayer("Maja2"));
+        //Game game = new Game(new HumanPlayer("Maja1"), new HumanPlayer("Maja2"));
+        Game game = new Game(new PlayerMin("min", 2), new PlayerMax("max", 6));
+        //Game game = new Game(new HumanPlayer("Maja"), new PlayerMax("AI", 3));
         game.gameLoop();
     }
 }

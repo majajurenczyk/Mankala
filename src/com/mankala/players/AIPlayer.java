@@ -12,21 +12,22 @@ public abstract class AIPlayer extends Player {
     public int min_max(GameState node, int depth, int player){ //0 - max player, 1 - min player
         if(depth == 0)
             return node.countEvaluationFunctionValue();
+        int value;
         if(player == 1){ //MINIMIZING PLAYER
-            int funcValueMax = Integer.MIN_VALUE;
+            value = Integer.MAX_VALUE;
             HashMap<Integer, GameState> children = node.getPossibleNextStatesForFirstPlayer();
             for(int move : children.keySet()){
-                funcValueMax = Math.max(funcValueMax, min_max(children.get(move), depth - 1, 2));
+                value = Math.min(value, min_max(children.get(move), depth - 1, 2));
             }
-            return funcValueMax;
+            return value;
         }
         else{ //MAXIMIZING PLAYER
-            int funcValueMin = Integer.MAX_VALUE;
-            HashMap<Integer, GameState> children = node.getPossibleNextStatesForFirstPlayer();
+            value = Integer.MIN_VALUE;
+            HashMap<Integer, GameState> children = node.getPossibleNextStatesForSecondPlayer();
             for(int move : children.keySet()){
-                funcValueMin = Math.min(funcValueMin, min_max(children.get(move), depth - 1, 1));
+                value = Math.max(value, min_max(children.get(move), depth - 1, 1));
             }
-            return  funcValueMin;
+            return value;
         }
     }
 }
