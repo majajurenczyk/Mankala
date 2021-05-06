@@ -1,7 +1,6 @@
 package com.mankala;
-import com.mankala.players.Player;
-import com.mankala.players.PlayerMax;
-import com.mankala.players.PlayerMin;
+import com.mankala.players.*;
+
 import java.util.HashMap;
 import java.util.Random;
 
@@ -13,6 +12,9 @@ public class Game {
     private GameState actualGameState;
 
     private HashMap<Integer, GameState> nextPossibleStatesByMove;
+
+    private static final int MIN_MAX = 1;
+    private static final int ALPHA_BETA = 2;
 
     public Game(Player firstPlayer, Player secondPlayer){
         this.firstPlayer = firstPlayer;
@@ -38,9 +40,9 @@ public class Game {
         }
     }
 
-    public void startGame(){
+    public void startGame(int numberOfHoles, int numberOfPebbles){
         drawStartPlayer();
-        actualGameState = new GameState(firstPlayer.getPlayerName(), secondPlayer.getPlayerName());
+        actualGameState = new GameState(firstPlayer.getPlayerName(), secondPlayer.getPlayerName(),numberOfHoles, numberOfPebbles);
         updateNextPossibleStatesByMove();
     }
 
@@ -53,15 +55,28 @@ public class Game {
     }
 
     public Player gameLoop(){
-        startGame();
+        startGame(6, 6);
+        boolean start = true;
         System.out.println("\nGra rozpoczęta!\n");
-        while (!actualGameState.isOver()){
+        while (/*!actualGameState.isOver()*/ !((actualPlayer == firstPlayer && actualGameState.isFirstOver()) || (actualPlayer == secondPlayer && actualGameState.isSecondOver()))){
             actualGameState.drawState();
-            actualGameState = actualPlayer.makeMove(nextPossibleStatesByMove);
+            if(start && actualPlayer instanceof AIPlayer && ((AIPlayer) actualPlayer).isRandomMove()) {
+                actualGameState = actualPlayer.makeRandomMove(nextPossibleStatesByMove);
+                start = false;
+            }
+            else{
+                actualGameState = actualPlayer.makeMove(nextPossibleStatesByMove);
+            }
             changePlayer();
             updateNextPossibleStatesByMove();
         }
+
         actualGameState.drawState();
+
+        System.out.println("\nFINAL RESULT\n");
+
+        actualGameState.drawState();
+
         if(actualGameState.isFirstWinner()){
             System.out.println("\nWygrał " + firstPlayer.getPlayerName() + "!\n");
             return firstPlayer;
@@ -71,14 +86,16 @@ public class Game {
             return secondPlayer;
         }
         else{
-            System.out.println("\nerror\n");
+            System.out.println("\nDRAW!\n");
             return null;
         }
     }
 
     public static void main(String[] args) {
         //Game game = new Game(new HumanPlayer("Maja1"), new HumanPlayer("Maja2"));
-        Game game = new Game(new PlayerMin("min", 2), new PlayerMax("max", 6));
+        //Game game = new Game(new PlayerMin("min", 6), new PlayerMax("max", 2));
+        Game game = new Game(new PlayerMin("min", 2, true, ALPHA_BETA),
+                new PlayerMax("max", 7, true, ALPHA_BETA));
         //Game game = new Game(new HumanPlayer("Maja"), new PlayerMax("AI", 3));
         game.gameLoop();
     }

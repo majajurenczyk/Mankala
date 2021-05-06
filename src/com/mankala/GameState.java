@@ -13,66 +13,62 @@ public class GameState {
     private int startSecondPlayerHolesIndex;
     private int endSecondPlayerHolesIndex;
     private int secondPlayerWellIndex;
-
     private int numberOfHoles;
     private boolean isSecondCapture;
     private boolean isSecondNextMove;
     private boolean isFirstCapture;
     private boolean isFirstNextMove;
-
     private boolean isFirstWinner;
     private boolean isSecondWinner;
-
     private String firstPlayerName;
     private String secondPlayerName;
+    private int numberOfPebbles;
 
-    public GameState(String firstPlayerName, String secondPlayerName){
-        gameBoard = new int [14];
-        Arrays.fill(gameBoard, 4);
-        gameBoard[6] = 0;
-        gameBoard[13] = 0;
+    public GameState(String firstPlayerName, String secondPlayerName, int numberOfHoles, int numberOfPebbles){
+        gameBoard = new int [numberOfHoles*2 +2];
+        Arrays.fill(gameBoard, numberOfPebbles);
+        gameBoard[numberOfHoles] = 0;
+        gameBoard[gameBoard.length - 1] = 0;
 
-        numberOfHoles = 6;
+        this.numberOfHoles = numberOfHoles;
+        this.numberOfPebbles = numberOfPebbles;
         this.startFirstPlayerHolesIndex = 0;
-        this.endFirstPlayerHolesIndex = 5;
-        this.firstPlayerWellIndex = 6;
-        this.startSecondPlayerHolesIndex = 7;
-        this.endSecondPlayerHolesIndex = 12;
-        this.secondPlayerWellIndex = 13;
-
+        this.endFirstPlayerHolesIndex =  numberOfHoles - 1;
+        this.firstPlayerWellIndex = numberOfHoles;
+        this.startSecondPlayerHolesIndex = numberOfHoles + 1;
+        this.endSecondPlayerHolesIndex = numberOfHoles * 2;
+        this.secondPlayerWellIndex = gameBoard.length - 1;
         this.isSecondCapture = false;
         this.isSecondNextMove = false;
         this.isFirstCapture = false;
         this.isFirstNextMove = false;
-
         this.isFirstWinner = false;
         this.isSecondWinner = false;
-
         this.firstPlayerName = firstPlayerName;
         this.secondPlayerName = secondPlayerName;
 
     }
 
     public int countEvaluationFunctionValue(){
-/*        return gameBoard[secondPlayerWellIndex] + 10 * (isSecondCapture ? 1 : 0) + 3 * (isSecondNextMove ? 1 : 0)
+        /*return gameBoard[secondPlayerWellIndex] + 10 * (isSecondCapture ? 1 : 0) + 3 * (isSecondNextMove ? 1 : 0)
                 + 20 * (isSecondWinner ? 1 : 0) + 5*(gameBoard[secondPlayerWellIndex] - gameBoard[firstPlayerWellIndex]);*/
-    return gameBoard[secondPlayerWellIndex] - gameBoard[firstPlayerWellIndex];
+        return gameBoard[secondPlayerWellIndex] - gameBoard[firstPlayerWellIndex];
     }
 
     public HashMap<Integer, GameState> getPossibleNextStatesForFirstPlayer(){
         HashMap<Integer, GameState> resultStatesByMove = new HashMap<>();
-        IntStream.range(1, 7).filter(index -> gameBoard[getIndexByPositionForFirstPlayer(index)] > 0).forEach(hole -> resultStatesByMove.put(hole, this.getGameStateAfterFirstPlayerMove(hole)));
+        IntStream.range(1, numberOfHoles+1).filter(index -> gameBoard[getIndexByPositionForFirstPlayer(index)] > 0).forEach(hole -> resultStatesByMove.put(hole, this.getGameStateAfterFirstPlayerMove(hole)));
         return resultStatesByMove;
     }
 
     public HashMap<Integer, GameState> getPossibleNextStatesForSecondPlayer(){
         HashMap<Integer, GameState> resultStatesByMove = new HashMap<>();
-        IntStream.range(1, 7).filter(index -> gameBoard[getIndexByPositionForSecondPlayer(index)] > 0).forEach(hole -> resultStatesByMove.put(hole, this.getGameStateAfterSecondPlayerMove(hole)));
+        IntStream.range(1, numberOfHoles+1).filter(index -> gameBoard[getIndexByPositionForSecondPlayer(index)] > 0).forEach(hole -> resultStatesByMove.put(hole, this.getGameStateAfterSecondPlayerMove(hole)));
         return resultStatesByMove;
     }
 
     public GameState copyGameState(GameState gameState){
-        GameState newGameState = new GameState(gameState.firstPlayerName, gameState.secondPlayerName);
+        GameState newGameState = new GameState(gameState.firstPlayerName, gameState.secondPlayerName, gameState.numberOfHoles, gameState.numberOfPebbles);
         int [] newBoard = new int[gameState.gameBoard.length];
         System.arraycopy(gameState.gameBoard, 0, newBoard, 0, gameState.gameBoard.length);
         newGameState.gameBoard = newBoard;
@@ -82,7 +78,6 @@ public class GameState {
         newGameState.startSecondPlayerHolesIndex = gameState.startSecondPlayerHolesIndex;
         newGameState.endSecondPlayerHolesIndex = gameState.endSecondPlayerHolesIndex;
         newGameState.secondPlayerWellIndex = gameState.secondPlayerWellIndex;
-        newGameState.numberOfHoles = gameState.numberOfHoles;
         newGameState.isSecondCapture = false;
         newGameState.isSecondNextMove = false;
         newGameState.isFirstCapture = false;
@@ -126,6 +121,14 @@ public class GameState {
         return actualIndex;
     }
 
+    public boolean isFirstOver(){
+        return IntStream.range(startFirstPlayerHolesIndex, endFirstPlayerHolesIndex+1).allMatch(index -> gameBoard[index]==0);
+    }
+
+    public boolean isSecondOver(){
+        return IntStream.range(startSecondPlayerHolesIndex, endSecondPlayerHolesIndex+1).allMatch(index -> gameBoard[index]==0);
+    }
+
     public GameState getGameStateAfterFirstPlayerMove(int holePosition) {
         GameState newGameState = copyGameState(this);
         if(newGameState.gameBoard[getIndexByPositionForFirstPlayer(holePosition)] == 0) {
@@ -137,14 +140,23 @@ public class GameState {
 
         if(actualIndex <= newGameState.endFirstPlayerHolesIndex && actualIndex >= newGameState.startFirstPlayerHolesIndex) {
             newGameState.isFirstNextMove = true;
-            int oppositeIndex = 12 - actualIndex;
+            int oppositeIndex = 2*numberOfHoles - actualIndex;
             if(newGameState.gameBoard[actualIndex] == 1 && newGameState.gameBoard[oppositeIndex] > 0){
                 newGameState.isFirstCapture = true;
+                newGameState.isFirstNextMove = false;
                 newGameState.gameBoard[newGameState.firstPlayerWellIndex] += (newGameState.gameBoard[actualIndex] + newGameState.gameBoard[oppositeIndex]);
                 newGameState.gameBoard[actualIndex] = 0;
                 newGameState.gameBoard[oppositeIndex] = 0;
             }
         }
+
+        if(newGameState.isSecondOver() && !newGameState.isFirstNextMove){
+            for(int i = newGameState.startFirstPlayerHolesIndex; i <= newGameState.endFirstPlayerHolesIndex; i++){
+                newGameState.gameBoard[newGameState.firstPlayerWellIndex] += newGameState.gameBoard[i];
+                newGameState.gameBoard[i] = 0;
+            }
+        }
+
         return newGameState;
     }
 
@@ -159,12 +171,20 @@ public class GameState {
 
         if(actualIndex <= newGameState.endSecondPlayerHolesIndex && actualIndex >= newGameState.startSecondPlayerHolesIndex) {
             newGameState.isSecondNextMove = true;
-            int oppositeIndex = 12 - actualIndex;
+            int oppositeIndex = 2*numberOfHoles - actualIndex;
             if(newGameState.gameBoard[actualIndex] == 1 && newGameState.gameBoard[oppositeIndex] > 0){
                 newGameState.isSecondCapture = true;
+                newGameState.isSecondNextMove = false;
                 newGameState.gameBoard[newGameState.secondPlayerWellIndex] += (newGameState.gameBoard[actualIndex] + newGameState.gameBoard[oppositeIndex]);
                 newGameState.gameBoard[actualIndex] = 0;
                 newGameState.gameBoard[oppositeIndex] = 0;
+            }
+        }
+
+        if(newGameState.isFirstOver() && !newGameState.isSecondNextMove){
+            for(int i = newGameState.startSecondPlayerHolesIndex; i <= newGameState.endSecondPlayerHolesIndex; i++){
+                newGameState.gameBoard[newGameState.secondPlayerWellIndex] += newGameState.gameBoard[i];
+                newGameState.gameBoard[i] = 0;
             }
         }
         return newGameState;
