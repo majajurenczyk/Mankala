@@ -1,6 +1,6 @@
 package com.mankala;
 import com.mankala.players.*;
-
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -15,6 +15,10 @@ public class Game {
 
     private static final int MIN_MAX = 1;
     private static final int ALPHA_BETA = 2;
+    private static final int HEURISTIC_SUB_WINNER = 1;
+    private static final int HEURISTIC_SUB_CAPTURE = 2;
+    private static final int HEURISTIC_SUB_NEXT_MOVE = 3;
+
 
     public Game(Player firstPlayer, Player secondPlayer){
         this.firstPlayer = firstPlayer;
@@ -23,12 +27,22 @@ public class Game {
     }
 
     public void drawStartPlayer(){
-        Random random = new Random();
+        /*Random random = new Random();
         int result = random.nextInt(2);
         if(result == 0)
             actualPlayer = firstPlayer;
         else
-            actualPlayer = secondPlayer;
+            actualPlayer = secondPlayer;*/
+        //actualPlayer = firstPlayer;
+        actualPlayer = secondPlayer;
+    }
+
+    public Player getFirstPlayer(){
+        return firstPlayer;
+    }
+
+    public Player getSecondPlayer(){
+        return secondPlayer;
     }
 
     public void changePlayer(){
@@ -54,14 +68,15 @@ public class Game {
             nextPossibleStatesByMove = actualGameState.getPossibleNextStatesForSecondPlayer();
     }
 
-    public Player gameLoop(){
+    public Player gameLoop(int hole){
         startGame(6, 6);
         boolean start = true;
-        System.out.println("\nGra rozpoczęta!\n");
+        //System.out.println("\nGra rozpoczęta!\n");
         while (/*!actualGameState.isOver()*/ !((actualPlayer == firstPlayer && actualGameState.isFirstOver()) || (actualPlayer == secondPlayer && actualGameState.isSecondOver()))){
-            actualGameState.drawState();
+            //actualGameState.drawState();
             if(start && actualPlayer instanceof AIPlayer && ((AIPlayer) actualPlayer).isRandomMove()) {
-                actualGameState = actualPlayer.makeRandomMove(nextPossibleStatesByMove);
+                //actualGameState = actualPlayer.makeRandomMove(nextPossibleStatesByMove);
+                actualGameState = actualPlayer.makeSpecifiedMove(nextPossibleStatesByMove, hole);
                 start = false;
             }
             else{
@@ -71,32 +86,51 @@ public class Game {
             updateNextPossibleStatesByMove();
         }
 
-        actualGameState.drawState();
+        //actualGameState.drawState();
 
-        System.out.println("\nFINAL RESULT\n");
+        //System.out.println("\nFINAL RESULT\n");
 
-        actualGameState.drawState();
+        //actualGameState.drawState();
 
         if(actualGameState.isFirstWinner()){
-            System.out.println("\nWygrał " + firstPlayer.getPlayerName() + "!\n");
+            //System.out.println("\nWygrał " + firstPlayer.getPlayerName() + "!\n");
             return firstPlayer;
         }
         if(actualGameState.isSecondWinner()){
-            System.out.println("\nWygrał " + secondPlayer.getPlayerName() + "!\n");
+            //System.out.println("\nWygrał " + secondPlayer.getPlayerName() + "!\n");
             return secondPlayer;
         }
         else{
-            System.out.println("\nDRAW!\n");
-            return null;
+            //System.out.println("\nDRAW!\n");
+            return firstPlayer;
         }
     }
 
     public static void main(String[] args) {
-        //Game game = new Game(new HumanPlayer("Maja1"), new HumanPlayer("Maja2"));
-        //Game game = new Game(new PlayerMin("min", 6), new PlayerMax("max", 2));
-        Game game = new Game(new PlayerMin("min", 2, true, ALPHA_BETA),
-                new PlayerMax("max", 7, true, ALPHA_BETA));
-        //Game game = new Game(new HumanPlayer("Maja"), new PlayerMax("AI", 3));
-        game.gameLoop();
+        int first = 0;
+        int second = 0;
+        ArrayList<Integer> firstMove = new ArrayList<>();
+        ArrayList<Integer> secondMove = new ArrayList<>();
+
+        for(int i = 1; i <= 6; i++){
+            //firstMove.clear();
+            //secondMove.clear();
+            Game game = new Game(new PlayerMin("min", 2, true, ALPHA_BETA, HEURISTIC_SUB_NEXT_MOVE),
+                    new PlayerMax("max", 7, true, ALPHA_BETA, HEURISTIC_SUB_NEXT_MOVE));
+            Player winner = game.gameLoop(i);
+            if(winner.equals(game.firstPlayer)) {
+                first++;
+                firstMove.add(((AIPlayer)winner).getMoveTimes().size());
+            }
+            else {
+                second++;
+                secondMove.add(((AIPlayer)winner).getMoveTimes().size());
+            }
+        }
+        double avgF = (double)(firstMove.stream().mapToInt(Integer::intValue).sum()) / firstMove.size();
+        double avgS = (double)(secondMove.stream().mapToInt(Integer::intValue).sum()) / secondMove.size();
+
+        System.out.println(first + "\t"+ Double.toString(avgF).replace(".", ","));
+        System.out.println(second + "\t"+ Double.toString(avgS).replace(".", ","));
     }
 }

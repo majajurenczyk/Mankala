@@ -49,11 +49,31 @@ public class GameState {
 
     }
 
-    public int countEvaluationFunctionValue(){
-        /*return gameBoard[secondPlayerWellIndex] + 10 * (isSecondCapture ? 1 : 0) + 3 * (isSecondNextMove ? 1 : 0)
-                + 20 * (isSecondWinner ? 1 : 0) + 5*(gameBoard[secondPlayerWellIndex] - gameBoard[firstPlayerWellIndex]);*/
-        return gameBoard[secondPlayerWellIndex] - gameBoard[firstPlayerWellIndex];
+    public int countEvaluationFunctionValue(int heuristic){
+        if(heuristic == 1)
+            return subtractWinnerHeuristic();
+        else if(heuristic == 2)
+            return captureSubtractHeuristic();
+        else if(heuristic == 3)
+            return nextMoveSubtractHeuristic();
+        else
+            return 0;
     }
+
+    //ALL MAXIMIZING SECOND PLAYER=========================
+
+    public int subtractWinnerHeuristic(){
+        return (isSecondWinner() ? 1 : 0) * 50 + (isFirstWinner() ? 1 : 0) * (-50) +  gameBoard[secondPlayerWellIndex] - gameBoard[firstPlayerWellIndex];
+    }
+
+    public int captureSubtractHeuristic(){
+        return (isSecondCapture ? 1 : 0)*20 + (isFirstCapture ? 1 : 0)*(-20) + gameBoard[secondPlayerWellIndex] - gameBoard[firstPlayerWellIndex] ;
+    }
+
+    public int nextMoveSubtractHeuristic(){
+        return (isSecondNextMove ? 1 : 0)*10 + (isFirstNextMove ? 1 : 0)*(-10) + gameBoard[secondPlayerWellIndex] - gameBoard[firstPlayerWellIndex];
+    }
+    //======================================================
 
     public HashMap<Integer, GameState> getPossibleNextStatesForFirstPlayer(){
         HashMap<Integer, GameState> resultStatesByMove = new HashMap<>();
@@ -193,7 +213,7 @@ public class GameState {
     public boolean isOver(){
         boolean firstEnd = IntStream.range(startFirstPlayerHolesIndex, endFirstPlayerHolesIndex+1).allMatch(index -> gameBoard[index] == 0);
         boolean secondEnd = IntStream.range(startSecondPlayerHolesIndex, endSecondPlayerHolesIndex+1).allMatch(index -> gameBoard[index] == 0);
-        return  firstEnd || secondEnd;
+        return  firstEnd && secondEnd;
     }
 
     public boolean isFirstWinner(){

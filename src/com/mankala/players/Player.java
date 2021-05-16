@@ -1,5 +1,6 @@
 package com.mankala.players;
 
+import com.mankala.Game;
 import com.mankala.GameState;
 import sun.net.www.ApplicationLaunchException;
 
@@ -15,10 +16,16 @@ public abstract class Player {
     }
     public abstract GameState makeMove(HashMap<Integer, GameState> possibleMoves);
     public GameState makeRandomMove(HashMap<Integer, GameState> possibleMoves){
+        //System.out.println("RANDOM MOVE!");
         Random rand = new Random();
         ArrayList<Integer> arr = new ArrayList<>(possibleMoves.keySet());
         return possibleMoves.get(arr.get(rand.nextInt(arr.size())));
     }
+
+    public GameState makeSpecifiedMove(HashMap<Integer, GameState> possibleMoves, int move){
+        return possibleMoves.get(move);
+    }
+
     public String getPlayerName() {
         return playerName;
     }
